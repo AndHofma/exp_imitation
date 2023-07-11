@@ -6,9 +6,9 @@ participant info, and managing output results. They also include utility functio
 
 # Import necessary libraries
 from psychopy import event, monitors, visual, gui, core
-import random
-import os
 import datetime
+import os
+import csv
 
 # Setup paths
 # test stimulus directory
@@ -25,46 +25,45 @@ record_path = 'recordings/'
 random_path = 'randomization/'
 
 # to use in acoustic lab - second monitor name fixed here
-def create_window():
-    """
-    Create and initialize the experiment window.
-
-    Returns:
-    win: A PsychoPy visual.Window object for the experiment.
-    """
-    # Create a monitor object for the second screen
-    second_monitor = monitors.Monitor(name='EA273WMi')
-    # Set the appropriate settings for the second monitor
-    second_monitor.setSizePix((1920, 1080))  # Set the desired resolution of the second screen
-
-    # Create and return a window for the experiment on the second monitor
-    return visual.Window(monitor=second_monitor,  # Use the second monitor
-                         size=(1920, 1080),
-                         screen=1,  # Specify the index of the second screen (0 for the first screen, 1 for the second, etc.)
-                         allowGUI=True,
-                         fullscr=True,
-                         color=(255, 255, 255)
-                         )
-
-
-# to use for testing on laptop
 # def create_window():
 #    """
-#    Create and initialize the experiment window.
+    #Create and initialize the experiment window.
 #
 #    Returns:
-#    win : A PsychoPy visual.Window object for the experiment.
+#    win: A PsychoPy visual.Window object for the experiment.
 #    """
-#    # Create a monitor object
-#    currentMonitor = monitors.Monitor(name='testMonitor')
+#    # Create a monitor object for the second screen
+#    second_monitor = monitors.Monitor(name='EA273WMi')
+#    # Set the appropriate settings for the second monitor
+#    second_monitor.setSizePix((1920, 1080))  # Set the desired resolution of the second screen
 #
-#    # Create and return a window for the experiment
-#    return visual.Window(monitors.Monitor.getSizePix(currentMonitor),
-#                         monitor="testMonitor",
+#    # Create and return a window for the experiment on the second monitor
+#    return visual.Window(monitor=second_monitor,  # Use the second monitor
+#                         size=(1920, 1080),
+#                         screen=1,  # Specify the index of the second screen (0 for the first screen, 1 for the second, etc.)
 #                         allowGUI=True,
 #                         fullscr=True,
 #                         color=(255, 255, 255)
 #                         )
+
+
+# to use for testing on laptop
+def create_window():
+   """
+   Create and initialize the experiment window.
+   Returns:
+   win : A PsychoPy visual.Window object for the experiment.
+   """
+   # Create a monitor object
+   currentMonitor = monitors.Monitor(name='testMonitor')
+
+   # Create and return a window for the experiment
+   return visual.Window(monitors.Monitor.getSizePix(currentMonitor),
+                        monitor="testMonitor",
+                        allowGUI=True,
+                        fullscr=True,
+                        color=(255, 255, 255)
+                        )
 
 
 def initialize_stimuli(window):
@@ -78,21 +77,6 @@ def initialize_stimuli(window):
     Tuple containing various stimuli objects and parameters required for the experiment.
     """
 
-    # set up different TextStim needed throughout experiment
-    # Define the possible positions and corresponding labels for the pictograms
-    positions = [(-0.5, 0), (0.5, 0)]  # left and right positions
-    labels = ['left', 'right']  # corresponding labels
-
-    # Randomize the order - this will be randomized between participants
-    # Positions and labels are shuffled in the same order
-    indices = list(range(len(positions)))
-    random.shuffle(indices)
-    positions = [positions[i] for i in indices]
-    labels = [labels[i] for i in indices]
-
-    # Pictograms order
-    pictograms_order = [os.path.join(pics_path, 'no_bracket.png'), os.path.join(pics_path, 'bracket.png')]
-
     # fixation cross
     fixation = visual.ShapeStim(window,
                                 vertices=((0, -0.13), (0, 0.13), (0, 0), (-0.09, 0), (0.09, 0)),
@@ -100,21 +84,6 @@ def initialize_stimuli(window):
                                 closeShape=False,
                                 lineColor="black",
                                 name='fixation')
-
-    # Create pictograms
-    bracket_pic = visual.ImageStim(window,
-                                   image=pictograms_order[1],
-                                   pos=positions[1]
-                                   )
-
-    nobracket_pic = visual.ImageStim(window,
-                                     image=pictograms_order[0],
-                                     pos=positions[0]
-                                     )
-
-    # Labels for the positions
-    bracket_pos_label = labels[1]
-    nobracket_pos_label = labels[0]
 
     # pictograms
     audio_pic = visual.ImageStim(window,
@@ -132,11 +101,6 @@ def initialize_stimuli(window):
                              color='black',
                              pos=(0, 0.6),
                              wrapWidth=2)
-    # feedback
-    feedback = visual.TextStim(window,
-                               pos=(0, 0),
-                               wrapWidth=2,
-                               height=0.2)
 
     # default parameters for the recordings
     fs = 44100  # Sample rate
@@ -151,70 +115,49 @@ def initialize_stimuli(window):
 
     rec_seconds = visual_frames / estimated_frame_rate
 
-    return pictograms_order, fixation, bracket_pic, nobracket_pic, bracket_pos_label, nobracket_pos_label, \
-        audio_pic, rec_pic, prompt, feedback, fs, rec_seconds
+    return fixation, audio_pic, rec_pic, prompt, fs, rec_seconds
 
 
 def get_participant_info():
     """
-    Open a dialogue box to get participant information, including current date and time, subject_ID and experiment name.
-
-    Returns:
-    A dictionary containing the participant's information.
+    Open a dialogue box with 3 fields: current date and time, subject_ID and experiment name.
+    Returns a dictionary with the entered information.
     """
-    # Define experiment name and configuration
-    experiment_name = "Imitation-Task"  # Production-Dual-Task
-    experiment_config = {
+    exp_data = {
         'experiment': 'imitation_experiment',
         'subject': 'subject_ID',
         'cur_date': datetime.datetime.now().strftime("%Y-%m-%d_%Hh%M")  # Use strftime to format the date string
     }
-    # Create a dialogue box for the subject to enter their information
-    info_dialog = gui.DlgFromDict(experiment_config,
-                                  title=f'{experiment_name} Experiment',
-                                  fixed=['experiment', 'cur_date']
+    # Dialogue box to get participant information
+    info_dialog = gui.DlgFromDict(dictionary=exp_data,
+                                  title='Imitation-Experiment',
+                                  fixed=['experiment','cur_date']
                                   )
 
     if info_dialog.OK:
-        return experiment_config
+        return exp_data
     else:
         core.quit()
 
 
-def append_result_to_csv(result, practice_filename, test_filename, participant_info):
+def append_result_to_csv(result, output_filename):
     """
-    Append a single trial result to the appropriate CSV file (either practice or test).
+    Appends the result of a trial to the appropriate CSV file (practice or test phase).
 
     Parameters:
-    result (dict): A dictionary containing the trial result.
-    practice_filename (str): Path to the practice CSV file.
-    test_filename (str): Path to the test CSV file.
-    participant_info (dict): A dictionary containing the participant's information.
-    """
-    # Determine which CSV file to append to based on the phase
-    output_filename = practice_filename if result['phase'] == 'practice' else test_filename
+    result (dict): A dictionary containing the data for a single trial.
+    output_filename (str): The path of the CSV file for storing phase results.
 
-    # Append the trial result to the CSV file
+    The function writes the trial data, including phase, stimulus, response, accuracy, and timing info, to the CSV file.
+    """
+    # Check if file exists to write headers
+    file_exists = os.path.isfile(output_filename)
+
     with open(output_filename, 'a') as output_file:
-        output_file.write(
-            f"{participant_info['experiment']},"
-            f"{participant_info['subject']},"
-            f"{participant_info['cur_date']},"
-            f"{result['trial']},"
-            f"{result['phase']},"
-            f"{result['stimulus']},"
-            f"{result['recording']},"
-            f"{result['response']},"
-            f"{result['accuracy']},"
-            f"{result['manip']},"
-            f"{result['name_stim']},"
-            f"{result['condition']},"
-            f"{result['bracket_pic_position']},"
-            f"{result['nobracket_pic_position']},"
-            f"{result['start_time']},"
-            f"{result['end_time']},"
-            f"{result['duration']}\n"
-        )
+        writer = csv.DictWriter(output_file, fieldnames=result.keys())
+        if not file_exists:
+            writer.writeheader()  # File doesn't exist yet, so write a header
+        writer.writerow(result)
 
 
 def show_message(win, message, wait_for_keypress=True, duration=1, text_height=0.1):

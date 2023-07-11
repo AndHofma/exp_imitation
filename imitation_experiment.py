@@ -8,7 +8,7 @@ At the end of each phase, a message is displayed on the screen.
 """
 
 # Import necessary PsychoPy libraries
-from path_stimuli import check_and_create_config_paths, load_stimuli, load_or_generate_stimuli
+from path_and_randomization import check_and_create_config_paths, load_stimuli, load_and_randomize
 from configuration import get_participant_info, create_window, stim_path, output_path, pics_path, record_path, practice_stim_path, random_path
 from imitation_functions import show_message, conduct_experiment_phase
 from psychopy import core
@@ -27,7 +27,7 @@ window = create_window()
 practice_files = load_stimuli(practice_stim_path)
 
 # Load and/or randomize stimuli from the specified path for the test phase
-randomized_test_stimuli = load_or_generate_stimuli(stim_path, random_path)
+randomized_test_stimuli = load_and_randomize(stim_path, participant_info)
 
 # Display instructions for the imitation task
 show_message(window, instructImitationTask)

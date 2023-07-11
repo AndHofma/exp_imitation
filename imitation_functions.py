@@ -8,7 +8,7 @@ The participant's response, choice, and other trial information are saved in a C
 # Import necessary libraries
 from psychopy import core, event, visual, prefs  # import some libraries from PsychoPy
 # Set the audio library preference
-prefs.hardware['audioLib'] = ['pygame', 'pyo', 'PTB', 'sounddevice']
+prefs.hardware['audioLib'] = ['ptb', 'sounddevice', 'pygame', 'pyo']
 # Now, import sound
 from psychopy import sound
 import time
@@ -17,15 +17,14 @@ import sounddevice as sd
 from scipy.io.wavfile import write
 from configuration import append_result_to_csv, initialize_stimuli
 import os
-from path_stimuli import get_condition, get_manip, get_name_stim
+from path_and_randomization import get_manip, get_name_stim
 
 
 # Results list
 results = []
 
 
-def present_trial(fixation, window, imitation_stimulus, stimulus_file, audio_pic, rec_seconds, fs, rec_pic, prompt,
-                  bracket_pic, nobracket_pic, participant_info):
+def present_trial(fixation, window, imitation_stimulus, stimulus_file, audio_pic, rec_seconds, fs, rec_pic, participant_info):
     """
     Presents one trial to the participant and records their responses.
 
@@ -38,13 +37,9 @@ def present_trial(fixation, window, imitation_stimulus, stimulus_file, audio_pic
     rec_seconds (int): The duration of the recording.
     fs (int): The sampling rate of the recording.
     rec_pic (ImageStim): The image stimulus shown when the participant is recording.
-    prompt (TextStim): The text stimulus showing the instructions.
-    bracket_pic (ImageStim): The image stimulus shown in the bracket condition.
-    nobracket_pic (ImageStim): The image stimulus shown in the nobracket condition.
     participant_info (dict): Dictionary containing participant information.
 
     Returns:
-    response_key (str): The key pressed by the participant.
     responseRecordName (str): The name of the recording file.
     """
     # Display fixation point for 1 second
@@ -54,15 +49,17 @@ def present_trial(fixation, window, imitation_stimulus, stimulus_file, audio_pic
     core.wait(1.0)
     window.flip()
 
-    # Play stimulus and show audio_pic - stays on until stimulus played twice
-    imitation_stimulus.play()
-    audio_pic.draw()
-    window.flip()
-    core.wait(imitation_stimulus.getDuration()+1.0)  # wait for the duration of the sound + 500ms
-    # Play stimulus again
-    imitation_stimulus.play()
-    core.wait(imitation_stimulus.getDuration())  # wait for the duration of the sound
-    window.flip()
+    # Loop twice to play stimulus and show audio_pic
+    for _ in range(2):
+        audio_pic.draw()
+        window.flip()
+        imitation_stimulus.seek(0)  # reset the sound object to the beginning
+        imitation_stimulus.play()
+        core.wait(imitation_stimulus.getDuration() + 1.0)  # wait for the duration of the sound + 1 second
+        window.flip()  # clear the screen
+
+        # Brief pause between the two playbacks
+        core.wait(0.5)  # wait for 500ms
 
     # Start recording the participant's verbal response
     responseRecord = sd.rec(int(rec_seconds * fs), samplerate=fs, channels=1)
@@ -85,21 +82,10 @@ def present_trial(fixation, window, imitation_stimulus, stimulus_file, audio_pic
     write(os.path.join(subj_path_rec, participant_info['subject'] + '_' + filename + '.wav'), fs, responseRecord)
     responseRecordName = participant_info['subject'] + '_' + filename + '.wav'
 
-    # Ask the participant to choose a pictogram using arrow keys
-    prompt.setText('Welches Piktogramm passt zur Namenssequenz? \n Drücken Sie die entsprechende Pfeiltaste.')
-    prompt.draw()
-    bracket_pic.draw()
-    nobracket_pic.draw()
-    window.flip()
-    response_key = event.waitKeys(keyList=['left', 'right'])[0]
-    window.flip()
-    core.wait(1)  # inter trial interval 2s
-
-    return response_key, responseRecordName
+    return responseRecordName
 
 
-def conduct_experiment_phase(window, phase_stimuli, phase_name, stimuli_path,
-                             practice_filename, test_filename, participant_info):
+def conduct_experiment_phase(window, phase_stimuli, phase_name, stimuli_path, practice_filename, test_filename, participant_info):
     """
     Conduct an experiment phase (practice or test).
 
@@ -111,8 +97,7 @@ def conduct_experiment_phase(window, phase_stimuli, phase_name, stimuli_path,
     participant_info (dict): Dictionary containing participant information.
     results (list): List to store result dictionaries.
     """
-    pictograms_order, fixation, bracket_pic, nobracket_pic, bracket_pos_label, nobracket_pos_label, audio_pic, \
-        rec_pic, prompt, feedback, fs, rec_seconds = initialize_stimuli(window)
+    fixation, audio_pic, rec_pic, prompt, fs, rec_seconds = initialize_stimuli(window)
     # Initialize start time and format it into string
     start_time = time.time()
     start_time_str = datetime.datetime.fromtimestamp(start_time).strftime('%H:%M:%S')
@@ -125,16 +110,8 @@ def conduct_experiment_phase(window, phase_stimuli, phase_name, stimuli_path,
         else:
             imitation_stimulus = stimulus_file
 
-        response_key, responseRecordName = present_trial(fixation, window, imitation_stimulus, stimulus_file,
-                                                         audio_pic, rec_seconds, fs, rec_pic, prompt, bracket_pic,
-                                                         nobracket_pic, participant_info)
-        # Determine accuracy and feedback
-        correct_answer = 'left' if (get_condition(stimulus_file) == 'nob' and nobracket_pos_label == 'left') or \
-                                   (get_condition(stimulus_file) == 'bra' and bracket_pos_label == 'left') else 'right'
-        accuracy = 1 if response_key == correct_answer else 0
-        if phase_name == 'practice':
-            feedback = "Richtig!" if response_key == correct_answer else "Falsch!"
-            show_message(window, feedback, wait_for_keypress=False, text_height=0.3)
+        responseRecordName = present_trial(fixation, window, imitation_stimulus, stimulus_file, audio_pic, rec_seconds,
+                                           fs, rec_pic, participant_info)
 
         # Record end time and duration
         end_time = time.time()
@@ -153,13 +130,8 @@ def conduct_experiment_phase(window, phase_stimuli, phase_name, stimuli_path,
             'phase': phase_name,
             'stimulus': stimulus_file,
             'recording': responseRecordName,
-            'response': response_key,
-            'accuracy': accuracy,
             'manip': get_manip(stimulus_file),
             'name_stim': get_name_stim(stimulus_file),
-            'condition': get_condition(stimulus_file),
-            'bracket_pic_position': bracket_pos_label,
-            'nobracket_pic_position': nobracket_pos_label,
             'start_time': start_time_str,
             'end_time': end_time_str,
             'duration': duration_str
@@ -186,6 +158,6 @@ def show_message(window, message, wait_for_keypress=True, duration=1, text_heigh
     text_stim.draw()
     window.flip()
     if wait_for_keypress:
-        event.waitKeys()
+        event.waitKeys(keyList=['return'])
     else:
         core.wait(duration)
