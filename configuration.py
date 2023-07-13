@@ -1,14 +1,34 @@
 """
-This module contains helper functions for running an auditory imitation experiment using PsychoPy.
-The functions are responsible for creating the experiment window, initializing the stimuli, collecting
-participant info, and managing output results. They also include utility functions for presenting messages on screen.
+configuration.py
+----------------
+A module that handles the initialization and setup of the PsychoPy experiment. It includes functions that prepare the
+visual and auditory stimuli, create the experiment window, gather participant information, record the results and
+display messages on the screen. The directories for stimuli, results, pictograms, recordings, and randomized stimuli are
+also setup here.
+
+Functions:
+create_window() -> PsychoPy.visual.Window:
+    Creates and initializes a new window for the experiment, using appropriate settings.
+
+initialize_stimuli(window: PsychoPy.visual.Window) -> Tuple:
+    Initializes the visual and auditory stimuli for the experiment.
+
+get_participant_info() -> dict:
+    Gathers and returns the participant information through a GUI dialog.
+
+append_result_to_csv(writer: csv.DictWriter, result: dict, file_exists: bool, output_file: File):
+    Appends the result of a trial to the appropriate CSV file (practice or test phase).
+
+show_message(win: PsychoPy.visual.Window, message: str, wait_for_keypress: bool=True, duration: float=1, text_height: float=0.1):
+    Displays a message on the screen and waits for a user input or for a set duration before continuing.
 """
+
 
 # Import necessary libraries
 from psychopy import event, monitors, visual, gui, core
 import datetime
 import os
-import csv
+
 
 # Setup paths
 # test stimulus directory
@@ -49,32 +69,36 @@ random_path = 'randomization/'
 
 # to use for testing on laptop
 def create_window():
-   """
-   Create and initialize the experiment window.
-   Returns:
-   win : A PsychoPy visual.Window object for the experiment.
-   """
-   # Create a monitor object
-   currentMonitor = monitors.Monitor(name='testMonitor')
+    """
+    Create and initialize the experiment window.
+    Returns:
+    win : A PsychoPy visual.Window object for the experiment.
+    """
+    # Create a monitor object
+    current_monitor = monitors.Monitor(name='testMonitor')
 
-   # Create and return a window for the experiment
-   return visual.Window(monitors.Monitor.getSizePix(currentMonitor),
-                        monitor="testMonitor",
-                        allowGUI=True,
-                        fullscr=True,
-                        color=(255, 255, 255)
-                        )
+    # Create and return a window for the experiment
+    return visual.Window(monitors.Monitor.getSizePix(current_monitor),
+                         monitor="testMonitor",
+                         allowGUI=True,
+                         fullscr=True,
+                         color=(255, 255, 255)
+                         )
 
 
 def initialize_stimuli(window):
     """
-    Initializes the visual and auditory stimuli for the experiment.
+    Initializes the visual and auditory stimuli for the experiment. The stimuli include a fixation cross,
+    pictograms, and a response prompt. The function also sets up default parameters for the recordings, including
+    the sample rate and the recording duration in seconds, which is calculated based on the monitor's refresh rate.
 
     Parameters:
-    window (Window): A PsychoPy window object.
+    window (PsychoPy.visual.Window): A PsychoPy window object where the stimuli will be displayed.
 
     Returns:
-    Tuple containing various stimuli objects and parameters required for the experiment.
+    Tuple[PsychoPy.visual.ShapeStim, PsychoPy.visual.ImageStim, PsychoPy.visual.ImageStim, PsychoPy.visual.TextStim, int, float]:
+    A tuple containing a ShapeStim object for the fixation cross, two ImageStim objects for the pictograms, a TextStim
+    object for the response prompt, the sample rate for the recordings, and the recording duration in seconds.
     """
 
     # fixation cross
@@ -131,7 +155,7 @@ def get_participant_info():
     # Dialogue box to get participant information
     info_dialog = gui.DlgFromDict(dictionary=exp_data,
                                   title='Imitation-Experiment',
-                                  fixed=['experiment','cur_date']
+                                  fixed=['experiment', 'cur_date']
                                   )
 
     if info_dialog.OK:
@@ -140,24 +164,23 @@ def get_participant_info():
         core.quit()
 
 
-def append_result_to_csv(result, output_filename):
+def append_result_to_csv(writer, result, file_exists, output_file):
     """
     Appends the result of a trial to the appropriate CSV file (practice or test phase).
 
     Parameters:
+    writer (csv.DictWriter): The CSV writer object to use for writing.
     result (dict): A dictionary containing the data for a single trial.
-    output_filename (str): The path of the CSV file for storing phase results.
+    file_exists (bool): Whether the CSV file exists already.
+    output_file (File object): The CSV file object to use for writing.
 
     The function writes the trial data, including phase, stimulus, response, accuracy, and timing info, to the CSV file.
     """
-    # Check if file exists to write headers
-    file_exists = os.path.isfile(output_filename)
-
-    with open(output_filename, 'a') as output_file:
-        writer = csv.DictWriter(output_file, fieldnames=result.keys())
-        if not file_exists:
-            writer.writeheader()  # File doesn't exist yet, so write a header
-        writer.writerow(result)
+    if not file_exists:
+        writer.writeheader()  # File doesn't exist yet, so write a header
+    writer.writerow(result)
+    output_file.flush()  # Flush Python's write buffer
+    os.fsync(output_file.fileno())  # Tell the OS to flush its buffers to disk
 
 
 def show_message(win, message, wait_for_keypress=True, duration=1, text_height=0.1):

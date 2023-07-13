@@ -1,5 +1,25 @@
 """
-Instruction Text blocks
+instructions.py
+---------------
+
+This module contains strings of instructions for the experiment, provided in German. These instructions guide
+the participant through the imitation task and provide information about the experiment's progression and tasks
+to be performed.
+
+Variables:
+----------
+instructImitationTask : str
+    The welcome message and instructions for the imitation task. It guides the participant about the listening
+    and repeating task with the help of visual cues (headphone and microphone symbols).
+
+instructPracticeImitationEnd : str
+    Instructions provided at the end of the practice phase. It informs the participant about the total number
+    of recordings they will hear during the experiment, the estimated duration of the experiment, and the option
+    for a break after the first half of the experiment.
+
+imitationEnd : str
+    The final message displayed to the participant at the end of the experiment. It acknowledges the participant's
+    effort and guides them to end the experiment by pressing the Enter key.
 """
 
 

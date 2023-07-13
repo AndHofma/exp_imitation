@@ -18,7 +18,7 @@ from instructions import instructImitationTask, instructPracticeImitationEnd, im
 participant_info = get_participant_info()
 
 # Check and create necessary paths for stimuli and output, returning filenames for output CSVs
-practice_output_filename, test_output_filename = check_and_create_config_paths(stim_path, practice_stim_path, output_path, pics_path, record_path, random_path, participant_info)
+check_and_create_config_paths(stim_path, practice_stim_path, output_path, pics_path, record_path, random_path, participant_info)
 
 # Create a window for displaying stimuli
 window = create_window()
@@ -33,7 +33,7 @@ randomized_test_stimuli = load_and_randomize(stim_path, participant_info)
 show_message(window, instructImitationTask)
 
 # Conduct the practice phase of the experiment, recording participant's responses and other trial data
-conduct_experiment_phase(window, practice_files, 'practice', practice_stim_path, practice_output_filename, test_output_filename, participant_info)
+conduct_experiment_phase(window, practice_files, 'practice', practice_stim_path, participant_info)
 
 # Clear the screen
 window.flip()
@@ -42,7 +42,7 @@ window.flip()
 show_message(window, instructPracticeImitationEnd)
 
 # Conduct the main test phase of the experiment, recording participant's responses and other trial data
-conduct_experiment_phase(window, randomized_test_stimuli, 'test', stim_path, practice_output_filename, test_output_filename, participant_info)
+conduct_experiment_phase(window, randomized_test_stimuli, 'test', stim_path, participant_info)
 
 # Clear the screen
 window.flip()

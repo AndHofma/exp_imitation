@@ -136,14 +136,42 @@
             </Attribute>
           </value>
         </entry>
-        <entry key="\randomization\randomized_stimuli.csv">
+        <entry key="\randomization\subject_ID\subject_ID_2023-07-11_12h30_randomized_imitation_stimuli.csv">
           <value>
             <Attribute>
               <option name="separator" value="," />
             </Attribute>
           </value>
         </entry>
-        <entry key="\results\subject_ID\imitation_test_results_subject_ID_20230711_123023.csv">
+        <entry key="\randomization\subject_ID\subject_ID_2023-07-13_13h24_randomized_imitation_stimuli.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\randomization\subject_ID\subject_ID_2023-07-13_14h58_randomized_imitation_stimuli.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\results\subject_ID\imitation_practice_results_subject_ID_20230713_122354.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\results\subject_ID\practice_imitation_experiment_subject_ID_20230713_132505.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\results\subject_ID\test_imitation_experiment_subject_ID_20230713_132639.csv">
           <value>
             <Attribute>
               <option name="separator" value="," />

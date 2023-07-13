@@ -1,68 +1,24 @@
 """
-path_and_randomization.py
--------------------------
+This module assists with stimulus handling for experimental purposes. It includes functions for:
 
-This module provides functionalities for verifying the existence of necessary file and directory paths, creating
-participant-specific paths and results files, loading and randomizing audio stimuli, and saving randomized stimuli
-as CSV files. The module helps streamline the process of preparing the experiment's setup by handling necessary
-file system operations and the randomization of stimuli.
+- Checking and creating necessary directories and files.
+- Loading, generating, shuffling, grouping, and rearranging stimuli.
+- Extracting specific attributes from stimulus filenames.
 
-Functions:
-----------
-check_and_create_config_paths(stim_path, practice_stim_path, output_path, pics_path, record_path, random_path, participant_info):
-    Verifies the existence of necessary directories for experiment execution, raises exceptions with appropriate
-    error messages if any of the directories are not found. If certain directories don't exist, it creates them.
-    It also creates participant-specific directories and results files.
-
-load_stimuli(stim_path):
-    Loads '.wav' stimuli files from the provided directory.
-
-randomize_stimuli(stimuli_files):
-    Randomizes the order of stimuli files given certain constraints.
-
-constraint_randomization(stimuli):
-    Applies constraint-based randomization to a list of stimuli data.
-
-save_randomized_stimuli(randomized_stimuli, participant_info):
-    Saves the randomized stimuli file names to a CSV file in a participant-specific directory.
-
-load_and_randomize(stim_path, participant_info):
-    Loads stimuli files from a provided directory, randomizes them, and saves the randomized stimuli.
-
-get_manip(filename):
-    Extracts the 'manip' value from a stimulus filename.
-
-get_name_stim(filename):
-    Extracts the 'name_stim' value from a stimulus filename.
-
-get_stimulus_data(filename):
-    Extracts the 'manip' and 'name_stim' values from a stimulus filename.
 """
-
 
 # Import necessary libraries
 import os
 import random
 import csv
+from collections import defaultdict
 
 
-def check_and_create_config_paths(stim_path, practice_stim_path, output_path, pics_path, record_path,
-                                  random_path, participant_info):
+def check_and_create_config_paths(stim_path, practice_stim_path, output_path, pics_path, record_path, random_path, participant_info):
     """
-    Verifies the existence of necessary directories, raises exceptions if directories are not found,
-    creates directories if they don't exist, and sets up participant-specific paths and results files.
-
-    Parameters:
-    stim_path (str): Path to the directory with test stimuli.
-    practice_stim_path (str): Path to the directory with practice stimuli.
-    output_path (str): Path to the output directory.
-    pics_path (str): Path to the directory with pictures.
-    record_path (str): Path to the directory for recorded files.
-    random_path (str): Path to the directory for randomization files.
-    participant_info (dict): Information about the participant, including subject identifier.
-
-    Raises:
-    Exception: If any of the necessary directories (stim_path, practice_stim_path, or pics_path) are not found.
+    Function checks the existence of specific directories and raises
+    exceptions with appropriate error messages if any of the directories are not found.
+    Also, creates necessary participant directories and result files.
     """
     # Check if the input directory for test stimuli exists
     if not os.path.exists(stim_path):
@@ -128,8 +84,25 @@ def randomize_stimuli(stimuli_files):
     # Extract stimulus data for each file
     stimulus_data = [get_stimulus_data(file) for file in stimuli_files]
 
-    # Randomize order of stimuli with constraints
-    randomized_stimuli_data = constraint_randomization(stimulus_data)
+    # Group by name_stim
+    names = defaultdict(list)
+    for data in stimulus_data:
+        names[data['name_stim']].append(data)
+
+    # Randomize order of names
+    name_order = list(names.keys())
+    random.shuffle(name_order)
+
+    # Initialize list to store the final order of stimuli
+    randomized_stimuli_data = []
+
+    # Iterate over manips in randomized order
+    for name in name_order:
+        # Randomly order stimuli with constraints
+        name_stimuli_ordered = constraint_randomization(names[name])
+
+        # Append stimuli to final list
+        randomized_stimuli_data.extend(name_stimuli_ordered)
 
     # Now, extract the filenames from the data
     randomized_stimuli = [data['filename'] for data in randomized_stimuli_data]
@@ -156,8 +129,8 @@ def constraint_randomization(stimuli):
         valid_stimulus_found = False
         for stimulus in stimuli_copy:
             if (
-                    sum(stim['name_stim'] == stimulus['name_stim'] for stim in randomized_stimuli[-3:]) < 3 and
-                    sum(stim['manip'] == stimulus['manip'] for stim in randomized_stimuli[-2:]) < 2
+                sum(stim['name_stim'] == stimulus['name_stim'] for stim in randomized_stimuli[-3:]) < 3 and
+                sum(stim['manip'] == stimulus['manip'] for stim in randomized_stimuli[-2:]) < 2
             ):
                 randomized_stimuli.append(stimulus)
                 stimuli_copy.remove(stimulus)
@@ -187,6 +160,7 @@ def save_randomized_stimuli(randomized_stimuli, participant_info):
     filename = f"{participant_info['subject']}_{participant_info['cur_date'].replace(':', '-').replace(' ', '_')}_randomized_imitation_stimuli.csv"
     filepath = os.path.join(directory, filename)
 
+
     # Write csv file
     with open(filepath, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
@@ -207,8 +181,10 @@ def load_and_randomize(stim_path, participant_info):
     """
     # Load stimuli files
     stimuli_files = load_stimuli(stim_path)
+
     # Randomize stimuli
     randomized_stimuli = randomize_stimuli(stimuli_files)
+
     # Save randomized stimuli
     save_randomized_stimuli(randomized_stimuli, participant_info)
 
