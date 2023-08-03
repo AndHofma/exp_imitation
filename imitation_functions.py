@@ -45,7 +45,7 @@ import csv
 results = []
 
 
-def present_trial(fixation, window, imitation_stimulus1, imitation_stimulus2, audio_pic, rec_seconds, fs, rec_pic, participant_info, stimulus_file):
+def present_trial(fixation, window, imitation_stimulus1, imitation_stimulus2, audio_pic, rec_seconds, fs, rec_pic, participant_info, stimulus_file, phase_name):
     """
     Presents a trial in the auditory imitation experiment to the participant.
 
@@ -64,6 +64,7 @@ def present_trial(fixation, window, imitation_stimulus1, imitation_stimulus2, au
     rec_pic (ImageStim): A PsychoPy visual stimulus object shown when the participant is recording their response.
     participant_info (dict): A dictionary containing participant information, including 'subject' which represents the participant ID.
     stimulus_file (str): The filename of the auditory stimulus.
+    phase_name (str): Name of the current phase ('practice' or 'test').
 
     Returns:
     response_record_name (str): The name of the .wav file containing the participant's response.
@@ -104,8 +105,8 @@ def present_trial(fixation, window, imitation_stimulus1, imitation_stimulus2, au
 
     # Save the participant's verbal response as a .wav file
     filename = os.path.splitext(os.path.basename(stimulus_file))[0]
-    write(os.path.join(subj_path_rec, participant_info['subject'] + '_' + filename + '.wav'), fs, response_record)
-    response_record_name = participant_info['subject'] + '_' + filename + '.wav'
+    write(os.path.join(subj_path_rec, 'imitation' + '_' + phase_name + '_' + participant_info['subject'] + '_' + filename + '.wav'), fs, response_record)
+    response_record_name = 'imitation' + '_' + phase_name + '_' + participant_info['subject'] + '_' + filename + '.wav'
 
     return response_record_name
 
@@ -166,7 +167,7 @@ def conduct_experiment_phase(window, phase_stimuli, phase_name, stimuli_path, pa
                 imitation_stimulus2 = stimulus_file
 
             response_record_name = present_trial(fixation, window, imitation_stimulus1, imitation_stimulus2,
-                                                 audio_pic, rec_seconds, fs, rec_pic, participant_info, stimulus_file)
+                                                 audio_pic, rec_seconds, fs, rec_pic, participant_info, stimulus_file, phase_name)
 
             # Record end time and duration
             end_time = time.time()
