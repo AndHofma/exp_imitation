@@ -32,9 +32,9 @@ import os
 
 # Setup paths
 # test stimulus directory
-stim_path = 'test_stimuli/'
+stim_path = 'stimuli/test_stimuli/'
 # practice stim directory
-practice_stim_path = 'practice_stimuli/'
+practice_stim_path = 'stimuli/practice_stimuli/'
 # output directory for experiment results
 output_path = 'results/'
 # directory for the pictograms used

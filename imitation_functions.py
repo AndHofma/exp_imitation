@@ -45,7 +45,7 @@ import csv
 results = []
 
 
-def present_trial(fixation, window, imitation_stimulus1, imitation_stimulus2, audio_pic, rec_seconds, fs, rec_pic, participant_info, stimulus_file, phase_name):
+def present_trial(fixation, window, imitation_stimulus1, imitation_stimulus2, audio_pic, rec_seconds, fs, rec_pic, participant_info, stimulus_file, phase_name, trial_counter):
     """
     Presents a trial in the auditory imitation experiment to the participant.
 
@@ -105,8 +105,10 @@ def present_trial(fixation, window, imitation_stimulus1, imitation_stimulus2, au
 
     # Save the participant's verbal response as a .wav file
     filename = os.path.splitext(os.path.basename(stimulus_file))[0]
-    write(os.path.join(subj_path_rec, 'imitation' + '_' + phase_name + '_' + participant_info['subject'] + '_' + filename + '.wav'), fs, response_record)
-    response_record_name = 'imitation' + '_' + phase_name + '_' + participant_info['subject'] + '_' + filename + '.wav'
+    write(os.path.join(subj_path_rec, 'imitation' + '_' + participant_info['subject'] + '_' + phase_name + '_' +
+                       "{:02d}".format(trial_counter) + '_' + filename + '.wav'), fs, response_record)
+    response_record_name = 'imitation' + '_' + participant_info['subject'] + '_' + phase_name + '_' + \
+                           "{:02d}".format(trial_counter) + '_' + filename + '.wav'
 
     return response_record_name
 
@@ -167,7 +169,8 @@ def conduct_experiment_phase(window, phase_stimuli, phase_name, stimuli_path, pa
                 imitation_stimulus2 = stimulus_file
 
             response_record_name = present_trial(fixation, window, imitation_stimulus1, imitation_stimulus2,
-                                                 audio_pic, rec_seconds, fs, rec_pic, participant_info, stimulus_file, phase_name)
+                                                 audio_pic, rec_seconds, fs, rec_pic, participant_info, stimulus_file,
+                                                 phase_name, trial_counter)
 
             # Record end time and duration
             end_time = time.time()
@@ -182,7 +185,7 @@ def conduct_experiment_phase(window, phase_stimuli, phase_name, stimuli_path, pa
                 'experiment': participant_info['experiment'],
                 'subject_ID': participant_info['subject'],
                 'date': participant_info['cur_date'],
-                'trial': trial_counter,
+                'trial': "{:02d}".format(trial_counter),
                 'phase': phase_name,
                 'stimulus': stimulus_file,
                 'recording': response_record_name,
