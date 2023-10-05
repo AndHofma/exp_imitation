@@ -3,6 +3,13 @@
   <component name="CsvFileAttributes">
     <option name="attributeMap">
       <map>
+        <entry key="C:\Users\Andrea Hofmann\OneDrive\PhD\data-processing\ProPer\Coordinates_Young\data_tables\scores_df.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="\randomization\subject_ID\subject_ID_2023-07-11_12h30_randomized_imitation_stimuli.csv">
           <value>
             <Attribute>
@@ -18,27 +25,6 @@
           </value>
         </entry>
         <entry key="\randomization\subject_ID\subject_ID_2023-07-13_14h58_randomized_imitation_stimuli.csv">
-          <value>
-            <Attribute>
-              <option name="separator" value="," />
-            </Attribute>
-          </value>
-        </entry>
-        <entry key="\results\subject_ID\imitation_practice_results_subject_ID_20230713_122354.csv">
-          <value>
-            <Attribute>
-              <option name="separator" value="," />
-            </Attribute>
-          </value>
-        </entry>
-        <entry key="\results\subject_ID\practice_imitation_experiment_subject_ID_20230713_132505.csv">
-          <value>
-            <Attribute>
-              <option name="separator" value="," />
-            </Attribute>
-          </value>
-        </entry>
-        <entry key="\results\subject_ID\test_imitation_experiment_subject_ID_20230713_132639.csv">
           <value>
             <Attribute>
               <option name="separator" value="," />

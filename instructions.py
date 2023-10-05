@@ -36,9 +36,9 @@ Drücken Sie die Eingabetaste (Enter), um mit zwei Übungsbeispielen zu beginnen
 instructPracticeImitationEnd = """
 Das waren die Übungsbeispiele. \n
 Falls Sie noch Fragen haben, geben Sie bitte der Versuchsleiterin Bescheid.
-Sie hören 80 verschiedene Aufnahmen, jeweils zweimal.
+Sie hören 80 verschiedene Aufnahmen, jeweils zweimal, in fünf Blöcken.
 Das Experiment dauert insgesamt ca. 15 Minuten.
-Nach der Hälfte der Zeit können Sie eine Pause machen, wenn Sie dies wünschen. \n
+Nach jedem Block können Sie eine Pause machen, wenn Sie dies wünschen. \n
 Drücken Sie die Eingabetaste (Enter), um mit dem Experiment zu starten.
 """
 

@@ -9,7 +9,7 @@ At the end of each phase, a message is displayed on the screen.
 
 # Import necessary PsychoPy libraries
 from path_and_randomization import check_and_create_config_paths, load_stimuli, load_and_randomize
-from configuration import get_participant_info, create_window, stim_path, output_path, pics_path, record_path, practice_stim_path, random_path
+from configuration import get_participant_info, create_window, stim_full_path, output_full_path, pics_full_path, record_full_path, practice_stim_full_path, random_full_path
 from imitation_functions import show_message, conduct_experiment_phase
 from psychopy import core
 from instructions import instructImitationTask, instructPracticeImitationEnd, imitationEnd
@@ -18,22 +18,22 @@ from instructions import instructImitationTask, instructPracticeImitationEnd, im
 participant_info = get_participant_info()
 
 # Check and create necessary paths for stimuli and output, returning filenames for output CSVs
-check_and_create_config_paths(stim_path, practice_stim_path, output_path, pics_path, record_path, random_path, participant_info)
+check_and_create_config_paths(stim_full_path, practice_stim_full_path, pics_full_path, output_full_path, record_full_path, random_full_path, participant_info)
 
 # Create a window for displaying stimuli
 window = create_window()
 
 # Load stimuli from the specified path for the practice phase
-practice_files = load_stimuli(practice_stim_path)
+practice_files = load_stimuli(practice_stim_full_path)
 
 # Load and/or randomize stimuli from the specified path for the test phase
-randomized_test_stimuli = load_and_randomize(stim_path, participant_info)
+randomized_test_stimuli = load_and_randomize(stim_full_path, participant_info)
 
 # Display instructions for the imitation task
 show_message(window, instructImitationTask)
 
 # Conduct the practice phase of the experiment, recording participant's responses and other trial data
-conduct_experiment_phase(window, practice_files, 'practice', practice_stim_path, participant_info)
+conduct_experiment_phase(window, practice_files, 'practice', practice_stim_full_path, participant_info)
 
 # Clear the screen
 window.flip()
@@ -42,7 +42,7 @@ window.flip()
 show_message(window, instructPracticeImitationEnd)
 
 # Conduct the main test phase of the experiment, recording participant's responses and other trial data
-conduct_experiment_phase(window, randomized_test_stimuli, 'test', stim_path, participant_info)
+conduct_experiment_phase(window, randomized_test_stimuli, 'test', stim_full_path, participant_info)
 
 # Clear the screen
 window.flip()

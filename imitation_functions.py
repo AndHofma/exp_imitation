@@ -2,26 +2,19 @@
 imitation_functions.py
 ----------------------
 
-This module contains functions for running an auditory imitation experiment. The experiment is intended for use with
-the PsychoPy library and consists of two phases: a practice phase and a test phase. Each trial in the experiment involves
-the participant listening to an auditory stimulus and imitating it verbally. The participant's verbal response is recorded
-and they are then asked to choose a pictogram that matches the auditory stimulus.
+This module contains functions to conduct and manage a PsychoPy-based audio experiment.
+The functions handle stimuli presentation, participant responses recording, results saving,
+and display management.
 
-Functions in this module can present a trial to a participant, conduct an experiment phase (either the practice phase or
-the test phase), and display messages to the participant during the experiment. This module also includes functions for
-recording the participant's responses and writing the results of the experiment to a CSV file.
+Dependencies:
+    - PsychoPy: For stimuli presentation and timing.
+    - sounddevice: For recording audio responses from participants.
+    - scipy.io.wavfile: To save audio responses in .wav format.
+    - csv: To save trial results in a CSV format.
 
-Typical usage example:
-
-    from imitation_functions import present_trial, conduct_experiment_phase
-
-    present_trial(fixation, window, imitation_stimulus1, imitation_stimulus2, audio_pic, rec_seconds, fs, rec_pic,
-                  participant_info, stimulus_file)
-
-    conduct_experiment_phase(window, phase_stimuli, phase_name, stimuli_path, participant_info)
-
-This module requires that `psychopy`, `sounddevice`, and `scipy` are installed within the Python environment you are
-running this module in.
+Modules:
+    - configuration: For appending results to a CSV and initializing stimuli.
+    - path_and_randomization: To get manipulations and stimulus names.
 """
 
 
@@ -45,29 +38,26 @@ import csv
 results = []
 
 
-def present_trial(fixation, window, imitation_stimulus1, imitation_stimulus2, audio_pic, rec_seconds, fs, rec_pic, participant_info, stimulus_file, phase_name, trial_counter):
+def present_trial(fixation, window, audio_pic, rec_seconds, fs, rec_pic, stimuli_full_path,
+                  participant_info, stimulus_file, phase_name, trial_counter):
     """
-    Presents a trial in the auditory imitation experiment to the participant.
-
-    During the trial, a fixation stimulus is presented, followed by an auditory stimulus. The auditory stimulus is
-    played twice, with a short pause in between. After the auditory stimulus is played, a recording begins and the
-    participant is prompted to verbally imitate the auditory stimulus. The participant's response is recorded and saved
-    as a .wav file in a participant-specific directory under 'recordings'.
+    Present a trial to the participant.
 
     Parameters:
-    fixation (VisualStim): A PsychoPy visual stimulus object used as a fixation point.
-    window (Window): A PsychoPy window object in which the stimuli are presented.
-    imitation_stimulus1 (Sound), imitation_stimulus2 (Sound): Two instances of the same sound stimulus to be imitated.
-    audio_pic (ImageStim): A PsychoPy visual stimulus object used as a pictogram shown when the auditory stimulus is played.
-    rec_seconds (int): The duration of the recording in seconds.
-    fs (int): The sampling rate of the recording.
-    rec_pic (ImageStim): A PsychoPy visual stimulus object shown when the participant is recording their response.
-    participant_info (dict): A dictionary containing participant information, including 'subject' which represents the participant ID.
-    stimulus_file (str): The filename of the auditory stimulus.
-    phase_name (str): Name of the current phase ('practice' or 'test').
+        fixation (object): Visual fixation point.
+        window (object): PsychoPy visual window.
+        audio_pic (object): Visual indicator that audio is playing.
+        rec_seconds (float): Duration for recording in seconds.
+        fs (int): Sampling rate for recording.
+        rec_pic (object): Visual indicator that recording is taking place.
+        stimuli_full_path (str): Path to the directory containing stimuli files.
+        participant_info (dict): Information about the participant.
+        stimulus_file (str): Name of the stimulus file to present.
+        phase_name (str): Name of the experiment phase ('practice' or other).
+        trial_counter (int): Counter indicating the current trial number.
 
     Returns:
-    response_record_name (str): The name of the .wav file containing the participant's response.
+        str: Name of the recorded response file.
     """
     # Display fixation point for 1 second
     fixation.name = 'fixation'
@@ -76,22 +66,28 @@ def present_trial(fixation, window, imitation_stimulus1, imitation_stimulus2, au
     core.wait(1.0)
     window.flip()
 
+    # Check if stimulus_file is a string (path) or a Sound object
+    if isinstance(stimulus_file, str):
+        imitation_stimulus1 = sound.Sound(os.path.join(stimuli_full_path, stimulus_file), sampleRate=48000)
+        imitation_stimulus2 = sound.Sound(os.path.join(stimuli_full_path, stimulus_file), sampleRate=48000)
+    else:
+        imitation_stimulus1 = stimulus_file
+        imitation_stimulus2 = stimulus_file
+
     # Loop twice to play stimulus and show audio_pic
     for stimulus in [imitation_stimulus1, imitation_stimulus2]:
         audio_pic.draw()
         window.flip()
         stimulus.play()
-        core.wait(stimulus.getDuration() + 1.0)  # wait for the duration of the sound + 1 second
-        window.flip()  # clear the screen
 
-        # Brief pause between the two playbacks
-        core.wait(0.5)  # wait for 500ms
+        core.wait(stimulus.getDuration()+0.3)  # wait for the duration of the sound + 0.7 seconds
+        window.flip()  # clear the screen
 
     # Start recording the participant's verbal response
     response_record = sd.rec(int(rec_seconds * fs), samplerate=fs, channels=1)
 
     # Present rec_pic for 350 frames
-    for frame in range(350):
+    for frame in range(300):
         rec_pic.draw()  # Draw pic
         window.flip()  # Flip window to make rec_pic visible
     # Stop the recording after the presentation is over
@@ -113,19 +109,33 @@ def present_trial(fixation, window, imitation_stimulus1, imitation_stimulus2, au
     return response_record_name
 
 
-def conduct_experiment_phase(window, phase_stimuli, phase_name, stimuli_path, participant_info):
+def display_pause_screen(window, block_number, total_blocks):
     """
-    Conduct an experiment phase (practice or test).
+    Display a pause screen in between blocks.
 
     Parameters:
-    phase_stimuli (list): List of stimuli for the current phase.
-    phase_name (str): Name of the current phase ('practice' or 'test').
-    stimuli_path (str): Path to the stimuli directory.
-    output_filename (str): Path to the output CSV file for the current phase.
-    participant_info (dict): Dictionary containing participant information.
-    results (list): List to store result dictionaries.
+        window (object): PsychoPy visual window.
+        block_number (int): Current block number.
+        total_blocks (int): Total number of blocks.
     """
+    message = f"Block {block_number + 1} von {total_blocks} geschafft. Drücken Sie Enter, wenn Sie weitermachen möchten."
+    show_message(window, message)
 
+
+def conduct_experiment_phase(window, phase_stimuli, phase_name, stimuli_full_path, participant_info):
+    """
+    Conduct a phase of the experiment.
+
+    Parameters:
+        window (object): PsychoPy visual window.
+        phase_stimuli (list): List of stimuli for the current phase.
+        phase_name (str): Name of the experiment phase.
+        stimuli_full_path (str): Path to the directory containing stimuli files.
+        participant_info (dict): Information about the participant.
+
+    Returns:
+        list: List of dictionaries containing trial data.
+    """
     # path setup results per participant
     # Define the path in results for each subject
     subj_path_results = os.path.join('results', participant_info['subject'])
@@ -144,10 +154,13 @@ def conduct_experiment_phase(window, phase_stimuli, phase_name, stimuli_path, pa
 
     file_exists = os.path.isfile(output_filename)
 
+    # Get the total number of blocks
+    total_blocks = len(phase_stimuli)
+
     # Open file once, before the loop
-    with open(output_filename, 'a') as output_file:
+    with open(output_filename, 'a', newline='') as output_file:
         writer = csv.DictWriter(output_file, fieldnames=['experiment',
-                                                         'subject_ID',
+                                                         'subjectID',
                                                          'date',
                                                          'trial',
                                                          'phase',
@@ -157,67 +170,108 @@ def conduct_experiment_phase(window, phase_stimuli, phase_name, stimuli_path, pa
                                                          'name_stim',
                                                          'start_time',
                                                          'end_time',
-                                                         'duration'])
+                                                         'duration',
+                                                         ])
 
-        for stimulus_file in phase_stimuli:
-            # Check if stimulus_file is a string (path) or a Sound object
-            if isinstance(stimulus_file, str):
-                imitation_stimulus1 = sound.Sound(os.path.join(stimuli_path, stimulus_file))
-                imitation_stimulus2 = sound.Sound(os.path.join(stimuli_path, stimulus_file))
-            else:
-                imitation_stimulus1 = stimulus_file
-                imitation_stimulus2 = stimulus_file
+        if phase_name == 'practice':
+            for stimulus_file in phase_stimuli:
+                response_record_name = present_trial(
+                    fixation, window, audio_pic, rec_seconds, fs, rec_pic, stimuli_full_path,
+                    participant_info, stimulus_file, phase_name, trial_counter)
 
-            response_record_name = present_trial(fixation, window, imitation_stimulus1, imitation_stimulus2,
-                                                 audio_pic, rec_seconds, fs, rec_pic, participant_info, stimulus_file,
-                                                 phase_name, trial_counter)
+                # Record end time and duration
+                end_time = time.time()
+                end_time_str = datetime.datetime.fromtimestamp(end_time).strftime('%H:%M:%S')
+                duration = end_time - start_time
+                hours, remainder = divmod(duration, 3600)
+                minutes, seconds = divmod(remainder, 60)
+                duration_str = '{:02d}:{:02d}:{:02d}'.format(int(hours), int(minutes), int(seconds))
 
-            # Record end time and duration
-            end_time = time.time()
-            end_time_str = datetime.datetime.fromtimestamp(end_time).strftime('%H:%M:%S')
-            duration = end_time - start_time
-            hours, remainder = divmod(duration, 3600)
-            minutes, seconds = divmod(remainder, 60)
-            duration_str = '{:02d}:{:02d}:{:02d}'.format(int(hours), int(minutes), int(seconds))
+                # Store trial data
+                trial_data = {
+                    'experiment': participant_info['experiment'],
+                    'subjectID': participant_info['subject'],
+                    'date': participant_info['cur_date'],
+                    'trial': "{:02d}".format(trial_counter),
+                    'phase': phase_name,
+                    'stimulus': stimulus_file,
+                    'recording': response_record_name,
+                    'manip': get_manip(stimulus_file),
+                    'name_stim': get_name_stim(stimulus_file),
+                    'start_time': start_time_str,
+                    'end_time': end_time_str,
+                    'duration': duration_str
+                }
+                results.append(trial_data)
 
-            # Store trial data
-            trial_data = {
-                'experiment': participant_info['experiment'],
-                'subject_ID': participant_info['subject'],
-                'date': participant_info['cur_date'],
-                'trial': "{:02d}".format(trial_counter),
-                'phase': phase_name,
-                'stimulus': stimulus_file,
-                'recording': response_record_name,
-                'manip': get_manip(stimulus_file),
-                'name_stim': get_name_stim(stimulus_file),
-                'start_time': start_time_str,
-                'end_time': end_time_str,
-                'duration': duration_str
-            }
-            results.append(trial_data)
+                # Write data to csv file
+                append_result_to_csv(writer, trial_data, file_exists, output_file)
 
-            # Write data to csv file
-            append_result_to_csv(writer, trial_data, file_exists, output_file)
+                if not file_exists:
+                    file_exists = True  # After first write, file definitely exists
 
-            if not file_exists:
-                file_exists = True  # After first write, file definitely exists
+                # Increment trial counter
+                trial_counter += 1
+        else:
+            # Present each set of stimuli as one block
+            # Enumerate provides the block number (starting from 0, so we add 1)
+            for block_number, (name_coord, stimuli_block) in enumerate(phase_stimuli.items()):
+                for stimulus_file in stimuli_block:
+                    response_record_name = present_trial(
+                        fixation, window, audio_pic, rec_seconds, fs, rec_pic, stimuli_full_path,
+                        participant_info, stimulus_file, phase_name, trial_counter)
 
-            # Increment trial counter
-            trial_counter += 1
+                    # Record end time and duration
+                    end_time = time.time()
+                    end_time_str = datetime.datetime.fromtimestamp(end_time).strftime('%H:%M:%S')
+                    duration = end_time - start_time
+                    hours, remainder = divmod(duration, 3600)
+                    minutes, seconds = divmod(remainder, 60)
+                    duration_str = '{:02d}:{:02d}:{:02d}'.format(int(hours), int(minutes), int(seconds))
+
+                    # Store trial data
+                    trial_data = {
+                        'experiment': participant_info['experiment'],
+                        'subjectID': participant_info['subject'],
+                        'date': participant_info['cur_date'],
+                        'trial': "{:02d}".format(trial_counter),
+                        'phase': phase_name,
+                        'stimulus': stimulus_file,
+                        'recording': response_record_name,
+                        'manip': get_manip(stimulus_file),
+                        'name_stim': get_name_stim(stimulus_file),
+                        'start_time': start_time_str,
+                        'end_time': end_time_str,
+                        'duration': duration_str
+                    }
+                    results.append(trial_data)
+
+                    # Write data to csv file
+                    append_result_to_csv(writer, trial_data, file_exists, output_file)
+
+                    if not file_exists:
+                        file_exists = True  # After first write, file definitely exists
+
+                    # Increment trial counter
+                    trial_counter += 1
+
+                # After each block, show the prompt unless it's the last block or the phase is 'practice'
+                if block_number + 1 != total_blocks:
+                    display_pause_screen(window, block_number, total_blocks)
 
     return results
 
 
 def show_message(window, message, wait_for_keypress=True, duration=1, text_height=0.1):
     """
-    Show a message on the screen.
+    Display a text message on the screen.
 
     Parameters:
-    message (str): The message to display.
-    wait_for_keypress (bool, optional): Whether to wait for a keypress. Defaults to True.
-    duration (float, optional): Time in seconds to wait if wait_for_keypress is False. Defaults to 1.
-    text_height (float, optional): The height of the text. Defaults to 0.1.
+        window (object): PsychoPy visual window.
+        message (str): Message to be displayed.
+        wait_for_keypress (bool): If True, waits for key press; otherwise waits for a duration.
+        duration (float): Time in seconds to wait if not waiting for a keypress.
+        text_height (float): Height of the text (default is 0.1).
     """
     text_stim = visual.TextStim(window, text=message, wrapWidth=2, height=text_height, color="black")
     text_stim.draw()
