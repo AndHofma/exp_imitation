@@ -5,7 +5,7 @@ a = Analysis(
     ['imitation_experiment.py'],
     pathex=[],
     binaries=[],
-    datas=[('stimuli/', 'stimuli/'), ('pics/', 'pics/'), ('C:\\Users\\NOLA\\.conda\\envs\\exp_imitation\\Lib\\site-packages\\psychopy\\alerts', 'psychopy/alerts/alertsCatalogue')],
+    datas=[('C:/Apps/miniconda/envs/exp_imitation/Lib/site-packages/psychopy/alerts', 'psychopy/alerts/alertsCatalogue')],
     hiddenimports=['psychopy.visual.backends.pygletbackend', 'psychopy.visual.line'],
     hookspath=[],
     hooksconfig={},
@@ -34,5 +34,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon='C:\\Users\\NOLA\\OneDrive\\PhD\\events_conferences_presentations\\icons\\mime.ico',
+    icon='C:/Users/Andrea Hofmann/OneDrive/PhD/events_conferences_presentations/icons/mime.ico',
 )

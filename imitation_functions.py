@@ -28,9 +28,9 @@ import time
 import datetime
 import sounddevice as sd
 from scipy.io.wavfile import write
-from configuration import append_result_to_csv, initialize_stimuli
+from imitation_configuration import append_result_to_csv, initialize_stimuli
 import os
-from path_and_randomization import get_manip, get_name_stim
+from imitation_path_and_randomization import get_manip, get_name_stim
 import csv
 
 
