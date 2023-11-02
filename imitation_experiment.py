@@ -16,7 +16,7 @@ from imitation_instructions import instructImitationTask, instructPracticeImitat
 
 # Get participant information from a GUI prompt
 participant_info = get_participant_info()
-print(f'paths: {stim_path} {output_path} {pics_path} {record_path}')
+# print(f'paths: {stim_path} {output_path} {pics_path} {record_path}')
 # Check and create necessary paths for stimuli and output, returning filenames for output CSVs
 check_and_create_config_paths(stim_path, practice_stim_path, pics_path, output_path, record_path, random_path, participant_info)
 
@@ -28,7 +28,6 @@ practice_files = load_stimuli(practice_stim_path)
 
 # Load and/or randomize stimuli from the specified path for the test phase
 randomized_test_stimuli = load_and_randomize(stim_path, participant_info)
-
 # Display instructions for the imitation task
 show_message(window, instructImitationTask)
 
